@@ -4911,3 +4911,19 @@ window.close = function() {
     # 4GB.
     self.emcc_args += ['-O2', '-s', 'ALLOW_MEMORY_GROWTH', '-s', 'MAXIMUM_MEMORY=4GB', '-s', 'ABORTING_MALLOC=0']
     self.do_run_in_out_file_test('tests', 'browser', 'test_4GB_fail.cpp', js_engines=[V8_ENGINE])
+
+  # Tests that Emscripten-compiled applications can be run when a slash in the URL query or fragment of the js file
+  def test_browser_run_with_slash_in_query_and_hash(self):
+    src = open(path_from_root('tests', 'browser_test_hello_world.c')).read()
+    create_test_file('test.c', self.with_report_result(src))
+    self.compile_btest(['test.c', '-o', 'test.html', '-O3'])
+    src = open('test.html').read()
+    # Slash in query
+    create_test_file('test-query.html', src.replace('test.js', 'test.js?type=pass/fail'))
+    self.run_browser('test-query.html', None, '/report_result?0')
+    # Slash in fragment
+    create_test_file('test-hash.html', src.replace('test.js', 'test.js#pass/fail'))
+    self.run_browser('test-hash.html', None, '/report_result?0')
+    # Slash in query and fragment
+    create_test_file('test-query-hash.html', src.replace('test.js', 'test.js?type=pass/fail#pass/fail'))
+    self.run_browser('test-query-hash.html', None, '/report_result?0')
